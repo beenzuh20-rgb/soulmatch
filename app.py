@@ -135,45 +135,27 @@ def home():
 
 # ---------------- LOGIN ---------------- #
 
-@app.route("/login", methods=["GET","POST"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         conn = sqlite3.connect("dating.db")
         c = conn.cursor()
 
-      c.execute("SELECT * FROM users WHERE username=?", (request.form["username"],))
-user = c.fetchone()
+        c.execute(
+            "SELECT * FROM users WHERE username=?",
+            (request.form["username"],)
+        )
+        user = c.fetchone()
 
-if user and check_password_hash(user[2], request.form["password"]):
-    session["user_id"] = user[0]
-    return redirect("/profile")
+        conn.close()
 
-return "Invalid login"
+        if user and check_password_hash(user[2], request.form["password"]):
+            session["user_id"] = user[0]
+            return redirect("/profile")
 
-    return render_template_string(base_css + """
-<div class="overlay">
-<div class="glass">
-<h1 style="text-align:center;font-size:42px;color:white;margin-bottom:0;">
-💘 SoulMatch
-</h1>
+        return "Invalid login"
 
-<p style="text-align:center;color:#ddd;margin-top:5px;">
-Find Love. Build Connections.
-</p>
-<h2>Login</h2>
-<form method="post">
-<input name="username">
-<input name="password" type="password">
-<button>Login</button>
-</form>
-<p style="text-align:center; margin-top:10px;">
-    Don't have an account?
-    <a href="/signup">Sign up</a>
-</p>
-</div>
-</div>
-""")
-
+    return render_template("login.html")
 # ---------------- SIGNUP ---------------- #
 
 @app.route("/signup", methods=["GET","POST"])

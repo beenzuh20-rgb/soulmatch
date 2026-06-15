@@ -238,12 +238,7 @@ def profile():
     conn.close()
 
     return render_template("profile.html", user=user)
-<div class="overlay">
-<div class="glass">
-<h1 style="text-align:center;font-size:42px;color:white;margin-bottom:0;">
-💘 SoulMatch
-</h1>
-
+ 
 <p style="text-align:center;color:#ddd;margin-top:5px;">
 Find Love. Build Connections.
 </p>

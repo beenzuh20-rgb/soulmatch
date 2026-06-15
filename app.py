@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, redirect, session, render_template_string
+from flask import Flask, request, redirect, session, render_template, render_template_string
 import sqlite3
 from werkzeug.utils import secure_filename
 
@@ -123,15 +123,7 @@ img{
 
 @app.route("/")
 def home():
-    return render_template_string(base_css + """
-<div class="overlay">
-<div class="glass">
-<h1>❤️ SoulMatch</h1>
-<a href="/signup"><button>Create Account</button></a><br><br>
-<a href="/login"><button style="background:#333">Login</button></a>
-</div>
-</div>
-""")
+    return render_template("home.html")
 
 # ---------------- LOGIN ---------------- #
 

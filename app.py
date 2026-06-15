@@ -177,24 +177,7 @@ def signup():
         return redirect("/login")
 
     return render_template("signup.html")
-<div class="overlay">
-<div class="glass">
-<h1 style="text-align:center;font-size:42px;color:white;margin-bottom:0;">
-💘 SoulMatch
-</h1>
 
-<p style="text-align:center;color:#ddd;margin-top:5px;">
-Find Love. Build Connections.
-</p>
-<h2>Signup</h2>
-<form method="post">
-<input name="username">
-<input name="password" type="password">
-<button>Create</button>
-</form>
-</div>
-</div>
-""")
 
 # ---------------- PROFILE ---------------- #
 
@@ -239,41 +222,6 @@ def profile():
 
     return render_template("profile.html", user=user)
  
-<p style="text-align:center;color:#ddd;margin-top:5px;">
-Find Love. Build Connections.
-</p>
-<h2>My Profile</h2>
-
-{% if user[7] %}
-<img src="{{user[7]}}">
-{% endif %}
-
-<p><b>{{user[1]}}</b></p>
-<p>Age: {{user[4]}}</p>
-<p>Gender: {{user[5]}}</p>
-<p>Location: {{user[6]}}</p>
-<p>Interests: {{user[8]}}</p>
-
-<form method="post" enctype="multipart/form-data">
-<input name="age" placeholder="Age">
-<input name="gender" placeholder="Gender">
-<input name="location" placeholder="Location">
-<input name="interests" placeholder="Interests">
-<textarea name="bio" placeholder="Bio"></textarea>
-
-<input type="file" name="photo">
-
-<button>Save</button>
-</form>
-
-<br>
-<a href="/swipe">Swipe</a> |
-<a href="/matches">Matches</a> |
-<a href="/logout">Logout</a>
-
-</div>
-</div>
-""", user=user)
 
 # ---------------- LOGOUT (FIXED) ---------------- #
 
@@ -284,38 +232,7 @@ def logout():
 
 # ---------------- SWIPE ---------------- #
 
-@app.route("/swipe")
-def swipe():
-
-    if "user_id" not in session:
-        return redirect("/login")
-
-    conn = sqlite3.connect("dating.db")
-    c = conn.cursor()
-
-    c.execute("""
-    SELECT *
-    FROM users
-    WHERE id != ?
-    AND id NOT IN(
-        SELECT liked
-        FROM likes
-        WHERE liker=?
-    )
-    ORDER BY RANDOM()
-    LIMIT 1
-    """, (
-        session["user_id"],
-        session["user_id"]
-    ))
-
-    user = c.fetchone()
-    conn.close()
-
-    if not user:
-        return "No users"
-
-    return render_template_string(base_css + """
+return render_template_string(base_css + """
 <div class="overlay">
 <div class="glass">
 
@@ -326,6 +243,7 @@ def swipe():
 <p style="text-align:center;color:#ddd;margin-top:5px;">
 Find Love. Build Connections.
 </p>
+
 {% if user[7] %}
 <img src="{{user[7]}}">
 {% endif %}
@@ -334,7 +252,7 @@ Find Love. Build Connections.
 <p>{{user[3]}}</p>
 
 <a href="/like/{{user[0]}}"><button>❤️ Like</button></a>
-<a href="/pass_user"><button style="background:#333">❌ Pass</button></a>
+<a href="/swipe"><button style="background:#333">❌ Pass</button></a>
 
 <br><br>
 <a href="/profile">Back</a>
@@ -342,6 +260,8 @@ Find Love. Build Connections.
 </div>
 </div>
 """, user=user)
+
+
 
 # ---------------- LIKE ---------------- #
 

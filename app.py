@@ -303,27 +303,29 @@ def logout():
 
 @app.route("/swipe")
 def swipe():
+
     if "user_id" not in session:
         return redirect("/login")
 
-   conn = sqlite3.connect("dating.db")
-c = conn.cursor()
+    conn = sqlite3.connect("dating.db")
+    c = conn.cursor()
 
-c.execute("""
-SELECT *
-FROM users
-WHERE id != ?
-AND id NOT IN(
-    SELECT liked
-    FROM likes
-    WHERE liker=?
-)
-ORDER BY RANDOM()
-LIMIT 1
-""", (
-    session["user_id"],
-    session["user_id"]
-))
+    c.execute("""
+    SELECT *
+    FROM users
+    WHERE id != ?
+    AND id NOT IN(
+        SELECT liked
+        FROM likes
+        WHERE liker=?
+    )
+    ORDER BY RANDOM()
+    LIMIT 1
+    """, (
+        session["user_id"],
+        session["user_id"]
+    ))
+
     user = c.fetchone()
     conn.close()
 

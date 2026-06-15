@@ -253,7 +253,7 @@ def profile():
     user = c.fetchone()
     conn.close()
 
-    return render_template_string(base_css + """
+    return render_template("profile.html", user=user)
 <div class="overlay">
 <div class="glass">
 <h1 style="text-align:center;font-size:42px;color:white;margin-bottom:0;">

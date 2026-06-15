@@ -1,131 +1,182 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Profile - SoulMatch</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #1f1c2c, #928dab);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
+<title>Tinder Profile UI</title>
 
-        .card {
-            width: 420px;
-            background: rgba(255,255,255,0.12);
-            backdrop-filter: blur(20px);
-            border-radius: 25px;
-            padding: 25px;
-            color: white;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-            text-align: center;
-        }
+<style>
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(120deg, #1a1a2e, #16213e);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-        .avatar {
-            width: 130px;
-            height: 130px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid white;
-            margin-bottom: 15px;
-        }
+/* swipe container */
+.wrapper {
+    width: 360px;
+    position: relative;
+}
 
-        h2 {
-            margin: 10px 0 5px;
-            font-size: 24px;
-        }
+/* main card */
+.card {
+    background: white;
+    border-radius: 25px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    position: relative;
+}
 
-        .info {
-            text-align: left;
-            margin-top: 20px;
-            background: rgba(255,255,255,0.08);
-            padding: 15px;
-            border-radius: 15px;
-        }
+/* image */
+.card img {
+    width: 100%;
+    height: 420px;
+    object-fit: cover;
+}
 
-        .info p {
-            margin: 8px 0;
-            font-size: 14px;
-        }
+/* info section */
+.info {
+    padding: 15px;
+}
 
-        input, textarea {
-            width: 100%;
-            padding: 10px;
-            margin: 6px 0;
-            border-radius: 10px;
-            border: none;
-        }
+.name {
+    font-size: 22px;
+    font-weight: bold;
+}
 
-        button {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 30px;
-            background: linear-gradient(135deg,#ff416c,#ff4b2b);
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-        }
+.sub {
+    color: gray;
+    font-size: 14px;
+    margin-top: 3px;
+}
 
-        button:hover {
-            transform: scale(1.03);
-        }
+.bio {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #333;
+}
 
-        .nav {
-            margin-top: 15px;
-        }
+/* swipe buttons */
+.actions {
+    display: flex;
+    justify-content: space-around;
+    padding: 15px;
+}
 
-        .nav a {
-            color: white;
-            text-decoration: none;
-            margin: 0 8px;
-            font-size: 14px;
-        }
+.btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    transition: 0.2s;
+}
 
-        .nav a:hover {
-            text-decoration: underline;
-        }
-    </style>
+.btn:hover {
+    transform: scale(1.1);
+}
+
+.pass {
+    background: #ff4d4d;
+    color: white;
+}
+
+.like {
+    background: #4CAF50;
+    color: white;
+}
+
+.super {
+    background: #3498db;
+    color: white;
+}
+
+/* edit form */
+.edit {
+    margin-top: 15px;
+    background: rgba(255,255,255,0.1);
+    padding: 15px;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+}
+
+input, textarea {
+    width: 100%;
+    margin-top: 6px;
+    padding: 8px;
+    border-radius: 10px;
+    border: none;
+}
+
+button.save {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    border: none;
+    border-radius: 20px;
+    background: linear-gradient(135deg,#ff416c,#ff4b2b);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.links {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.links a {
+    color: white;
+    text-decoration: none;
+    margin: 0 8px;
+}
+</style>
 </head>
 
 <body>
 
-<div class="card">
+<div class="wrapper">
 
-    {% if user[7] %}
-        <img src="{{ user[7] }}" class="avatar">
-    {% else %}
-        <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="avatar">
-    {% endif %}
+    <div class="card">
 
-    <h2>{{ user[1] }}</h2>
-    <p>{{ user[3] }}</p>
+        {% if user[7] %}
+            <img src="{{ user[7] }}">
+        {% else %}
+            <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
+        {% endif %}
 
-    <div class="info">
-        <p><b>Age:</b> {{ user[4] }}</p>
-        <p><b>Gender:</b> {{ user[5] }}</p>
-        <p><b>Location:</b> {{ user[6] }}</p>
-        <p><b>Interests:</b> {{ user[8] }}</p>
+        <div class="info">
+            <div class="name">{{ user[1] }}, {{ user[4] }}</div>
+            <div class="sub">{{ user[5] }} • {{ user[6] }}</div>
+            <div class="bio">{{ user[3] }}</div>
+        </div>
+
+        <div class="actions">
+            <button class="btn pass">✖</button>
+            <button class="btn super">⭐</button>
+            <button class="btn like">❤</button>
+        </div>
+
     </div>
 
-    <h3>Edit Profile</h3>
+    <!-- EDIT PROFILE -->
+    <div class="edit">
+        <form method="POST" enctype="multipart/form-data">
+            <input name="age" placeholder="Age">
+            <input name="gender" placeholder="Gender">
+            <input name="location" placeholder="Location">
+            <input name="interests" placeholder="Interests">
+            <textarea name="bio" placeholder="Bio"></textarea>
+            <input type="file" name="photo">
 
-    <form method="POST" enctype="multipart/form-data">
-        <input name="age" placeholder="Age">
-        <input name="gender" placeholder="Gender">
-        <input name="location" placeholder="Location">
-        <input name="interests" placeholder="Interests">
-        <textarea name="bio" placeholder="Bio"></textarea>
-        <input type="file" name="photo">
+            <button class="save">Save Profile</button>
+        </form>
+    </div>
 
-        <button>Save Changes</button>
-    </form>
-
-    <div class="nav">
+    <div class="links">
         <a href="/swipe">Swipe</a>
         <a href="/matches">Matches</a>
         <a href="/logout">Logout</a>

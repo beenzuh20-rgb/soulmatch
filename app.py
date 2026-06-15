@@ -57,8 +57,8 @@ base_css = """
 <style>
 body{
     margin:0;
-    font-family:Segoe UI;
-    background:url('https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=1500&q=80');
+    font-family:'Segoe UI',sans-serif;
+    background:url('https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1600&q=80');
     background-size:cover;
     background-position:center;
 }
@@ -73,13 +73,17 @@ body{
 }
 
 .glass{
-    width:420px;
-    background:rgba(255,255,255,0.15);
-    backdrop-filter:blur(15px);
-    border-radius:20px;
-    padding:25px;
+    width:450px;
+    background:rgba(255,255,255,0.12);
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,0.2);
+    border-radius:25px;
+    padding:30px;
     color:white;
-    box-shadow:0 10px 40px rgba(0,0,0,0.3);
+    box-shadow:
+        0 8px 32px rgba(0,0,0,0.35),
+        inset 0 1px 1px rgba(255,255,255,0.2);
 }
 
 input, textarea{
@@ -92,23 +96,20 @@ input, textarea{
 
 button{
     width:100%;
-    padding:12px;
+    padding:14px;
     border:none;
-    border-radius:12px;
-    background:#ff4b6e;
+    border-radius:50px;
+    background:linear-gradient(135deg,#ff416c,#ff4b2b);
     color:white;
+    font-weight:bold;
+    font-size:16px;
     cursor:pointer;
-    font-size:15px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    transition:0.2s;
+    transition:all .3s ease;
 }
 
 button:hover{
-    transform:scale(1.03);
-    opacity:0.9;
+    transform:translateY(-2px);
+    box-shadow:0 8px 20px rgba(255,75,110,.4);
 }
 a{color:white;text-decoration:none}
 
@@ -148,6 +149,13 @@ def login():
     return render_template_string(base_css + """
 <div class="overlay">
 <div class="glass">
+<h1 style="text-align:center;font-size:42px;color:white;margin-bottom:0;">
+💘 SoulMatch
+</h1>
+
+<p style="text-align:center;color:#ddd;margin-top:5px;">
+Find Love. Build Connections.
+</p>
 <h2>Login</h2>
 <form method="post">
 <input name="username">
@@ -176,6 +184,13 @@ def signup():
     return render_template_string(base_css + """
 <div class="overlay">
 <div class="glass">
+<h1 style="text-align:center;font-size:42px;color:white;margin-bottom:0;">
+💘 SoulMatch
+</h1>
+
+<p style="text-align:center;color:#ddd;margin-top:5px;">
+Find Love. Build Connections.
+</p>
 <h2>Signup</h2>
 <form method="post">
 <input name="username">
@@ -230,7 +245,13 @@ def profile():
     return render_template_string(base_css + """
 <div class="overlay">
 <div class="glass">
+<h1 style="text-align:center;font-size:42px;color:white;margin-bottom:0;">
+💘 SoulMatch
+</h1>
 
+<p style="text-align:center;color:#ddd;margin-top:5px;">
+Find Love. Build Connections.
+</p>
 <h2>My Profile</h2>
 
 {% if user[7] %}
@@ -293,7 +314,13 @@ def swipe():
     return render_template_string(base_css + """
 <div class="overlay">
 <div class="glass">
+<h1 style="text-align:center;font-size:42px;color:white;margin-bottom:0;">
+💘 SoulMatch
+</h1>
 
+<p style="text-align:center;color:#ddd;margin-top:5px;">
+Find Love. Build Connections.
+</p>
 {% if user[7] %}
 <img src="{{user[7]}}">
 {% endif %}

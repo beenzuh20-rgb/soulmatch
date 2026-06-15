@@ -141,20 +141,14 @@ def login():
         conn = sqlite3.connect("dating.db")
         c = conn.cursor()
 
-       c.execute("SELECT * FROM users WHERE username=?",
-          (request.form["username"],))
+      c.execute("SELECT * FROM users WHERE username=?", (request.form["username"],))
 user = c.fetchone()
 
 if user and check_password_hash(user[2], request.form["password"]):
     session["user_id"] = user[0]
     return redirect("/profile")
-        conn.close()
 
-        if user:
-            session["user_id"] = user[0]
-            return redirect("/profile")
-
-        return "Invalid login"
+return "Invalid login"
 
     return render_template_string(base_css + """
 <div class="overlay">

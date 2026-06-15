@@ -188,8 +188,12 @@ def signup():
         conn = sqlite3.connect("dating.db")
         c = conn.cursor()
 
-        c.execute("INSERT INTO users(username,password) VALUES(?,?)",
-                  (request.form["username"], request.form["password"]))
+hashed_pw = generate_password_hash(request.form["password"])
+
+c.execute(
+    "INSERT INTO users(username, password) VALUES(?,?)",
+    (request.form["username"], hashed_pw)
+)
 
         conn.commit()
         conn.close()

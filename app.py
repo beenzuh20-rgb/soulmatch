@@ -107,6 +107,13 @@ button{
     transition:all .3s ease;
 }
 
+.match-card{
+    background:rgba(255,255,255,.12);
+    padding:15px;
+    border-radius:20px;
+    margin:15px 0;
+}
+
 button:hover{
     transform:translateY(-2px);
     box-shadow:0 8px 20px rgba(255,75,110,.4);
@@ -302,8 +309,20 @@ def swipe():
     conn = sqlite3.connect("dating.db")
     c = conn.cursor()
 
-    c.execute("SELECT * FROM users WHERE id != ? LIMIT 1",
-              (session["user_id"],))
+   c.execute("""
+SELECT *
+FROM users
+WHERE id != ?
+AND id NOT IN(
+    SELECT liked
+    FROM likes
+    WHERE liker=?
+)
+ORDER BY RANDOM()
+LIMIT 1
+""",
+(session["user_id"],
+ session["user_id"]))
 
     user = c.fetchone()
     conn.close()
@@ -345,21 +364,35 @@ Find Love. Build Connections.
 
 @app.route("/like/<int:user_id>")
 def like(user_id):
+
     conn = sqlite3.connect("dating.db")
     c = conn.cursor()
 
-    c.execute("INSERT INTO likes(liker,liked) VALUES(?,?)",
-              (session["user_id"], user_id))
+    me = session["user_id"]
+
+    c.execute(
+        "INSERT INTO likes(liker,liked) VALUES(?,?)",
+        (me,user_id)
+    )
+
+    c.execute("""
+    SELECT *
+    FROM likes
+    WHERE liker=? AND liked=?
+    """,(user_id,me))
+
+    mutual = c.fetchone()
 
     conn.commit()
     conn.close()
 
-    return redirect("/swipe")
+    if mutual:
+        return """
+        <h1>🎉 It's a Match!</h1>
+        <a href='/matches'>View Matches</a>
+        """
 
-@app.route("/pass_user")
-def pass_user():
     return redirect("/swipe")
-
 # ---------------- MATCHES ---------------- #
 
 @app.route("/matches")
@@ -368,13 +401,12 @@ def matches():
     c = conn.cursor()
 
     c.execute("""
-    SELECT u.username
-    FROM users u
-    JOIN likes l1 ON u.id=l1.liked
-    JOIN likes l2 ON u.id=l2.liker
-    WHERE l1.liker=? AND l2.liked=?
-    """, (session["user_id"], session["user_id"]))
-
+SELECT u.*
+FROM users u
+JOIN likes l1 ON u.id=l1.liked
+JOIN likes l2 ON u.id=l2.liker
+WHERE l1.liker=? AND l2.liked=?
+""", (session["user_id"], session["user_id"]))
     results = c.fetchall()
     conn.close()
 
@@ -384,14 +416,116 @@ def matches():
 <h2>Matches ❤️</h2>
 """
 
-    for r in results:
-        html += f"<p>💘 {r[0]}</p>"
+  for user in results:
+
+    photo = user[7] if user[7] else ""
+
+    html += f"""
+    <div class='match-card'>
+
+        <img src='{photo}'>
+
+        <h3>{user[1]}</h3>
+
+        <p>{user[6]}</p>
+
+        <a href='/chat/{user[0]}'>
+            <button>💬 Message</button>
+        </a>
+
+    </div>
+    """
 
     html += "<br><a href='/profile'>Back</a></div></div>"
     return render_template_string(html)
 
 # ---------------- RUN ---------------- #
+@app.route("/chat/<int:user_id>", methods=["GET","POST"])
+def chat(user_id):
 
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = sqlite3.connect("dating.db")
+    c = conn.cursor()
+
+    me = session["user_id"]
+
+    if request.method == "POST":
+
+        c.execute("""
+        INSERT INTO messages(sender,receiver,message)
+        VALUES(?,?,?)
+        """, (
+            me,
+            user_id,
+            request.form["message"]
+        ))
+
+        conn.commit()
+
+    c.execute("""
+    SELECT *
+    FROM messages
+    WHERE
+    (sender=? AND receiver=?)
+    OR
+    (sender=? AND receiver=?)
+    ORDER BY id
+    """, (
+        me,user_id,
+        user_id,me
+    ))
+
+    messages = c.fetchall()
+
+    c.execute(
+        "SELECT username FROM users WHERE id=?",
+        (user_id,)
+    )
+
+    other_user = c.fetchone()
+
+    conn.close()
+
+    html = base_css + f"""
+    <div class='overlay'>
+    <div class='glass'>
+
+    <h2>Chat with {other_user[0]}</h2>
+    """
+
+    for msg in messages:
+
+        sender = "You" if msg[1] == me else other_user[0]
+
+        html += f"""
+        <p>
+        <b>{sender}:</b>
+        {msg[3]}
+        </p>
+        """
+
+    html += f"""
+    <form method='post'>
+
+    <input
+        name='message'
+        placeholder='Type message...'>
+
+    <button>Send</button>
+
+    </form>
+
+    <br>
+
+    <a href='/matches'>Back</a>
+
+    </div>
+    </div>
+    """
+
+    return render_template_string(html)
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))

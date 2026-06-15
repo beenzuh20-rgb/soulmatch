@@ -306,10 +306,10 @@ def swipe():
     if "user_id" not in session:
         return redirect("/login")
 
-    conn = sqlite3.connect("dating.db")
-    c = conn.cursor()
+   conn = sqlite3.connect("dating.db")
+c = conn.cursor()
 
-   c.execute("""
+c.execute("""
 SELECT *
 FROM users
 WHERE id != ?
@@ -320,10 +320,10 @@ AND id NOT IN(
 )
 ORDER BY RANDOM()
 LIMIT 1
-""",
-(session["user_id"],
- session["user_id"]))
-
+""", (
+    session["user_id"],
+    session["user_id"]
+))
     user = c.fetchone()
     conn.close()
 
@@ -333,8 +333,6 @@ LIMIT 1
     return render_template_string(base_css + """
 <div class="overlay">
 <div class="glass">
-
-<h1>💘 SoulMatch</h1>
 
 <h1 style="text-align:center;font-size:42px;color:white;margin-bottom:0;">
 💘 SoulMatch
@@ -397,48 +395,58 @@ def like(user_id):
 
 @app.route("/matches")
 def matches():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
     conn = sqlite3.connect("dating.db")
     c = conn.cursor()
 
     c.execute("""
-SELECT u.*
-FROM users u
-JOIN likes l1 ON u.id=l1.liked
-JOIN likes l2 ON u.id=l2.liker
-WHERE l1.liker=? AND l2.liked=?
-""", (session["user_id"], session["user_id"]))
+    SELECT u.*
+    FROM users u
+    JOIN likes l1 ON u.id=l1.liked
+    JOIN likes l2 ON u.id=l2.liker
+    WHERE l1.liker=? AND l2.liked=?
+    """, (session["user_id"], session["user_id"]))
+
     results = c.fetchall()
     conn.close()
 
     html = base_css + """
-<div class="overlay">
-<div class="glass">
-<h2>Matches ❤️</h2>
-"""
+    <div class="overlay">
+    <div class="glass">
+    <h2>Matches ❤️</h2>
+    """
 
-  for user in results:
+    for user in results:
 
-    photo = user[7] if user[7] else ""
+        photo = user[7] if user[7] else ""
 
-    html += f"""
-    <div class='match-card'>
+        html += f"""
+        <div class='match-card'>
 
-        <img src='{photo}'>
+            <img src='{photo}'>
 
-        <h3>{user[1]}</h3>
+            <h3>{user[1]}</h3>
 
-        <p>{user[6]}</p>
+            <p>{user[6]}</p>
 
-        <a href='/chat/{user[0]}'>
-            <button>💬 Message</button>
-        </a>
+            <a href='/chat/{user[0]}'>
+                <button>💬 Message</button>
+            </a>
 
+        </div>
+        """
+
+    html += """
+    <br>
+    <a href='/profile'>Back</a>
+    </div>
     </div>
     """
 
-    html += "<br><a href='/profile'>Back</a></div></div>"
     return render_template_string(html)
-
 # ---------------- RUN ---------------- #
 @app.route("/chat/<int:user_id>", methods=["GET","POST"])
 def chat(user_id):

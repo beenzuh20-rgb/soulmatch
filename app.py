@@ -314,6 +314,9 @@ def swipe():
     return render_template_string(base_css + """
 <div class="overlay">
 <div class="glass">
+
+<h1>💘 SoulMatch</h1>
+
 <h1 style="text-align:center;font-size:42px;color:white;margin-bottom:0;">
 💘 SoulMatch
 </h1>

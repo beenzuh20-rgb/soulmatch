@@ -169,6 +169,10 @@ Find Love. Build Connections.
 <input name="password" type="password">
 <button>Login</button>
 </form>
+<p style="text-align:center; margin-top:10px;">
+    Don't have an account?
+    <a href="/signup">Sign up</a>
+</p>
 </div>
 </div>
 """)

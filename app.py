@@ -158,24 +158,24 @@ def login():
     return render_template("login.html")
 # ---------------- SIGNUP ---------------- #
 
-@app.route("/signup", methods=["GET","POST"])
+@app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
         conn = sqlite3.connect("dating.db")
         c = conn.cursor()
 
-hashed_pw = generate_password_hash(request.form["password"])
+        hashed_pw = generate_password_hash(request.form["password"])
 
-c.execute(
-    "INSERT INTO users(username, password) VALUES(?,?)",
-    (request.form["username"], hashed_pw)
-)
+        c.execute(
+            "INSERT INTO users(username, password) VALUES(?,?)",
+            (request.form["username"], hashed_pw)
+        )
 
         conn.commit()
         conn.close()
         return redirect("/login")
 
-    return render_template_string(base_css + """
+    return render_template("signup.html")
 <div class="overlay">
 <div class="glass">
 <h1 style="text-align:center;font-size:42px;color:white;margin-bottom:0;">

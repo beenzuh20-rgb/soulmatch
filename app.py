@@ -4,7 +4,7 @@ from flask import Flask, request, redirect, session, render_template
 import sqlite3
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
-import secrets   # Added for password reset
+import secrets
 
 app = Flask(__name__)
 app.secret_key = "soulmatch_secret"
@@ -17,13 +17,10 @@ def init_db():
     conn = sqlite3.connect("dating.db")
     c = conn.cursor()
    
-    # Add last_active column if missing
     c.execute("PRAGMA table_info(users)")
     columns = [col[1] for col in c.fetchall()]
     if "last_active" not in columns:
         c.execute("ALTER TABLE users ADD COLUMN last_active TEXT")
-    
-    # Added for Forgot Password feature
     if "reset_token" not in columns:
         c.execute("ALTER TABLE users ADD COLUMN reset_token TEXT")
     if "reset_expires" not in columns:
@@ -91,7 +88,7 @@ def is_blocked(user_id, other_id):
     conn.close()
     return blocked
 
-# ---------------- Forgot Password Routes ---------------- #
+# ---------------- Forgot & Reset Password ---------------- #
 @app.route("/forgot_password", methods=["GET", "POST"])
 def forgot_password():
     if request.method == "POST":
@@ -111,13 +108,41 @@ def forgot_password():
             conn.close()
             
             reset_link = f"https://{request.host}/reset_password/{token}"
-            
             return render_template("forgot_password_success.html", reset_link=reset_link)
         
         conn.close()
         return render_template("forgot_password.html", error="Username not found")
     
     return render_template("forgot_password.html")
+
+@app.route("/reset_password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    conn = sqlite3.connect("dating.db")
+    c = conn.cursor()
+    c.execute("SELECT id FROM users WHERE reset_token=? AND reset_expires > ?", 
+              (token, datetime.utcnow().isoformat()))
+    user = c.fetchone()
+    
+    if not user:
+        conn.close()
+        return render_template("reset_password.html", error="This reset link is invalid or has expired.")
+    
+    if request.method == "POST":
+        new_password = request.form.get("password")
+        if not new_password or len(new_password) < 6:
+            conn.close()
+            return render_template("reset_password.html", error="Password must be at least 6 characters.", token=token)
+        
+        hashed_pw = generate_password_hash(new_password)
+        c.execute("UPDATE users SET password=?, reset_token=NULL, reset_expires=NULL WHERE id=?", 
+                  (hashed_pw, user[0]))
+        conn.commit()
+        conn.close()
+        return render_template("reset_success.html")
+    
+    conn.close()
+    return render_template("reset_password.html", token=token)
+
 # ---------------- Existing Routes (Unchanged) ---------------- #
 @app.route("/")
 def home():

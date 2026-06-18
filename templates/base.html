@@ -74,6 +74,20 @@
         .footer-links { margin-top:20px; text-align:center; font-size:14px; }
         .footer-links a { margin:0 8px; color:#ddd; }
     </style>
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoulMatch</title>
+    
+    <!-- ✨ Add these 2 lines for the favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/png">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/png">
+    
+    <!-- Your existing styles go here -->
+    <style>
+        /* ... your current CSS ... */
+    </style>
+</head>
 </head>
 <body>
     {% block content %}{% endblock %}

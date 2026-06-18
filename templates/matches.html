@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="overlay">
+    <div class="glass">
+        <h2>Your Matches ❤️</h2>
+        
+        {% if not matches %}
+            <p>No matches yet. Keep swiping!</p>
+        {% else %}
+            {% for user in matches %}
+                <div class='match-card'>
+                    <img src="{{ user.photo or 'https://via.placeholder.com/300x300' }}">
+                    <h3>{{ user.username }}</h3>
+                    <p style="color:#0f0">{{ get_online_status(user.last_active) }}</p>
+                    <a href='/chat/{{ user.id }}'><button>💬 Message</button></a>
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        <br>
+        <a href='/profile'>← Back to Profile</a>
+        <div class="footer-links">
+            <a href="/terms">Terms</a> • 
+            <a href="/privacy">Privacy</a> • 
+            <a href="/safety">Safety Tips</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

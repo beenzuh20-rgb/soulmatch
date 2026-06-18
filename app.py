@@ -4,6 +4,7 @@ from flask import Flask, request, redirect, session, render_template
 import sqlite3
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
+import secrets   # Added for password reset
 
 app = Flask(__name__)
 app.secret_key = "soulmatch_secret"
@@ -15,13 +16,19 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def init_db():
     conn = sqlite3.connect("dating.db")
     c = conn.cursor()
-    
+   
     # Add last_active column if missing
     c.execute("PRAGMA table_info(users)")
     columns = [col[1] for col in c.fetchall()]
     if "last_active" not in columns:
         c.execute("ALTER TABLE users ADD COLUMN last_active TEXT")
     
+    # Added for Forgot Password feature
+    if "reset_token" not in columns:
+        c.execute("ALTER TABLE users ADD COLUMN reset_token TEXT")
+    if "reset_expires" not in columns:
+        c.execute("ALTER TABLE users ADD COLUMN reset_expires TEXT")
+   
     c.execute("""
     CREATE TABLE IF NOT EXISTS users(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -33,14 +40,16 @@ def init_db():
         location TEXT DEFAULT '',
         photo TEXT DEFAULT '',
         interests TEXT DEFAULT '',
-        last_active TEXT
+        last_active TEXT,
+        reset_token TEXT,
+        reset_expires TEXT
     )
     """)
     c.execute("CREATE TABLE IF NOT EXISTS likes(id INTEGER PRIMARY KEY AUTOINCREMENT, liker INTEGER, liked INTEGER)")
     c.execute("CREATE TABLE IF NOT EXISTS messages(id INTEGER PRIMARY KEY AUTOINCREMENT, sender INTEGER, receiver INTEGER, message TEXT, timestamp TEXT DEFAULT CURRENT_TIMESTAMP)")
     c.execute("CREATE TABLE IF NOT EXISTS reports(id INTEGER PRIMARY KEY AUTOINCREMENT, reporter_id INTEGER, reported_id INTEGER, reason TEXT, details TEXT, timestamp TEXT DEFAULT CURRENT_TIMESTAMP)")
     c.execute("CREATE TABLE IF NOT EXISTS blocks(id INTEGER PRIMARY KEY AUTOINCREMENT, blocker_id INTEGER, blocked_id INTEGER, timestamp TEXT DEFAULT CURRENT_TIMESTAMP, UNIQUE(blocker_id, blocked_id))")
-    
+   
     conn.commit()
     conn.close()
 
@@ -52,7 +61,7 @@ def update_last_active():
     if "user_id" in session:
         conn = sqlite3.connect("dating.db")
         c = conn.cursor()
-        c.execute("UPDATE users SET last_active = ? WHERE id = ?", 
+        c.execute("UPDATE users SET last_active = ? WHERE id = ?",
                  (datetime.utcnow().isoformat(), session["user_id"]))
         conn.commit()
         conn.close()
@@ -75,14 +84,69 @@ def is_blocked(user_id, other_id):
     conn = sqlite3.connect("dating.db")
     c = conn.cursor()
     c.execute("""
-        SELECT 1 FROM blocks 
+        SELECT 1 FROM blocks
         WHERE (blocker_id=? AND blocked_id=?) OR (blocker_id=? AND blocked_id=?)
     """, (user_id, other_id, other_id, user_id))
     blocked = c.fetchone() is not None
     conn.close()
     return blocked
 
-# ---------------- ROUTES ---------------- #
+# ---------------- Forgot Password Routes ---------------- #
+@app.route("/forgot_password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "POST":
+        username = request.form.get("username")
+        conn = sqlite3.connect("dating.db")
+        c = conn.cursor()
+        c.execute("SELECT id FROM users WHERE username=?", (username,))
+        user = c.fetchone()
+        
+        if user:
+            token = secrets.token_urlsafe(32)
+            expires = (datetime.utcnow() + timedelta(hours=1)).isoformat()
+            
+            c.execute("UPDATE users SET reset_token=?, reset_expires=? WHERE id=?", 
+                     (token, expires, user[0]))
+            conn.commit()
+            conn.close()
+            
+            reset_link = f"https://{request.host}/reset_password/{token}"
+            print(f"\n🔗 PASSWORD RESET LINK:\n{reset_link}\n")  # Check Render Logs
+            
+            return render_template("forgot_password_success.html")
+        
+        conn.close()
+        return render_template("forgot_password.html", error="Username not found")
+    
+    return render_template("forgot_password.html")
+
+@app.route("/reset_password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    conn = sqlite3.connect("dating.db")
+    c = conn.cursor()
+    c.execute("SELECT id FROM users WHERE reset_token=? AND reset_expires > ?", 
+              (token, datetime.utcnow().isoformat()))
+    user = c.fetchone()
+    
+    if not user:
+        conn.close()
+        return "Invalid or expired reset link. Please request a new one."
+    
+    if request.method == "POST":
+        new_password = request.form.get("password")
+        hashed_pw = generate_password_hash(new_password)
+        
+        c.execute("UPDATE users SET password=?, reset_token=NULL, reset_expires=NULL WHERE id=?", 
+                  (hashed_pw, user[0]))
+        conn.commit()
+        conn.close()
+        
+        return render_template("reset_success.html")
+    
+    conn.close()
+    return render_template("reset_password.html", token=token)
+
+# ---------------- Existing Routes (Unchanged) ---------------- #
 @app.route("/")
 def home():
     return render_template("home.html")
@@ -102,7 +166,7 @@ def safety():
 @app.route("/guidelines")
 def guidelines():
     return render_template("guidelines.html")
-    
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -122,12 +186,12 @@ def signup():
     if request.method == "POST":
         if request.form.get("agree_terms") != "on":
             return "You must agree to the Terms and Conditions to create an account."
-        
+       
         conn = sqlite3.connect("dating.db")
         c = conn.cursor()
         hashed_pw = generate_password_hash(request.form["password"])
         try:
-            c.execute("INSERT INTO users(username, password) VALUES(?,?)", 
+            c.execute("INSERT INTO users(username, password) VALUES(?,?)",
                       (request.form["username"], hashed_pw))
             conn.commit()
             conn.close()
@@ -141,10 +205,10 @@ def signup():
 def profile():
     if "user_id" not in session:
         return redirect("/login")
-    
+   
     conn = sqlite3.connect("dating.db")
     c = conn.cursor()
-    
+   
     if request.method == "POST":
         file_path = None
         if "photo" in request.files:
@@ -153,20 +217,19 @@ def profile():
                 filename = secure_filename(file.filename)
                 file_path = os.path.join(UPLOAD_FOLDER, filename)
                 file.save(file_path)
-        
-        c.execute("""UPDATE users SET bio=?, age=?, gender=?, location=?, 
+       
+        c.execute("""UPDATE users SET bio=?, age=?, gender=?, location=?,
                     interests=?, photo=COALESCE(?, photo) WHERE id=?""", (
             request.form.get("bio"), request.form.get("age"),
             request.form.get("gender"), request.form.get("location"),
             request.form.get("interests"), file_path, session["user_id"]
         ))
         conn.commit()
-    
+   
     c.execute("SELECT * FROM users WHERE id=?", (session["user_id"],))
     user = c.fetchone()
     conn.close()
-    
-    # Convert tuple to dict for easier template access
+   
     user_dict = {
         "id": user[0],
         "username": user[1],
@@ -178,12 +241,12 @@ def profile():
         "interests": user[8],
         "last_active": user[9]
     }
-    
+   
     interests = [i.strip() for i in (user[8] or "").split(",") if i.strip()]
-    
-    return render_template("profile.html", 
-                         user=user_dict, 
-                         interests=interests, 
+   
+    return render_template("profile.html",
+                         user=user_dict,
+                         interests=interests,
                          get_online_status=get_online_status)
 
 @app.route("/logout")
@@ -195,35 +258,35 @@ def logout():
 def swipe():
     if "user_id" not in session:
         return redirect("/login")
-    
+   
     conn = sqlite3.connect("dating.db")
     c = conn.cursor()
     c.execute("""
-        SELECT * FROM users 
-        WHERE id != ? 
+        SELECT * FROM users
+        WHERE id != ?
         AND id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ?)
         AND id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ?)
         ORDER BY RANDOM() LIMIT 1
     """, (session["user_id"], session["user_id"], session["user_id"]))
     user = c.fetchone()
     conn.close()
-    
+   
     if not user:
         return redirect("/matches")
-    
+   
     user_dict = {
         "id": user[0], "username": user[1], "bio": user[3],
         "age": user[4], "gender": user[5], "photo": user[7],
         "last_active": user[9]
     }
-    
+   
     return render_template("swipe.html", user=user_dict, get_online_status=get_online_status)
 
 @app.route("/like/<int:user_id>")
 def like(user_id):
     if "user_id" not in session or is_blocked(session["user_id"], user_id):
         return redirect("/swipe")
-    
+   
     conn = sqlite3.connect("dating.db")
     c = conn.cursor()
     me = session["user_id"]
@@ -232,7 +295,7 @@ def like(user_id):
     mutual = c.fetchone()
     conn.commit()
     conn.close()
-    
+   
     if mutual:
         return render_template("match.html")
     return redirect("/swipe")
@@ -241,7 +304,7 @@ def like(user_id):
 def matches():
     if "user_id" not in session:
         return redirect("/login")
-    
+   
     conn = sqlite3.connect("dating.db")
     c = conn.cursor()
     c.execute("""
@@ -254,7 +317,7 @@ def matches():
     """, (session["user_id"], session["user_id"], session["user_id"], session["user_id"]))
     rows = c.fetchall()
     conn.close()
-    
+   
     matches_list = []
     for row in rows:
         matches_list.append({
@@ -263,21 +326,21 @@ def matches():
             "photo": row[7],
             "last_active": row[9]
         })
-    
+   
     return render_template("matches.html", matches=matches_list, get_online_status=get_online_status)
 
 @app.route("/chat/<int:user_id>", methods=["GET", "POST"])
 def chat(user_id):
     if "user_id" not in session:
         return redirect("/login")
-    
+   
     me = session["user_id"]
     if is_blocked(me, user_id):
         return "You have blocked this user or vice versa."
-    
+   
     conn = sqlite3.connect("dating.db")
     c = conn.cursor()
-    
+   
     if request.method == "POST":
         if "message" in request.form:
             msg = request.form.get("message", "").strip()
@@ -296,24 +359,23 @@ def chat(user_id):
             c.execute("INSERT OR IGNORE INTO blocks(blocker_id, blocked_id) VALUES(?,?)", (me, user_id))
             conn.commit()
             return "<h2>User Blocked</h2><a href='/matches'>Back to Matches</a>"
-    
-    # Get messages
+   
     c.execute("""
-        SELECT * FROM messages 
+        SELECT * FROM messages
         WHERE (sender=? AND receiver=?) OR (sender=? AND receiver=?)
         ORDER BY id
     """, (me, user_id, user_id, me))
     messages = c.fetchall()
-    
+   
     c.execute("SELECT id, username, last_active FROM users WHERE id=?", (user_id,))
     other = c.fetchone()
     conn.close()
-    
+   
     other_dict = {"id": other[0], "username": other[1], "last_active": other[2]}
-    
-    return render_template("chat.html", 
-                         messages=messages, 
-                         other=other_dict, 
+   
+    return render_template("chat.html",
+                         messages=messages,
+                         other=other_dict,
                          current_user=me,
                          get_online_status=get_online_status)
 

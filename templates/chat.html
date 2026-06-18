@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="overlay">
+    <div class="glass">
+        <h2>💬 {{ other.username }} <small style="color:#0f0">({{ get_online_status(other.last_active) }})</small></h2>
+        
+        <div id="chatbox" style="max-height:340px; overflow-y:auto; margin:15px 0; padding-right:10px;">
+            {% for msg in messages %}
+                <div class="message-bubble {{ 'you' if msg.sender == current_user else 'them' }}">
+                    <strong>{{ 'You' if msg.sender == current_user else other.username }}</strong><br>
+                    {{ msg.message }}
+                </div>
+            {% endfor %}
+        </div>
+        
+        <form method="post" id="chatform">
+            <input name="message" placeholder="Type message..." style="width:72%;display:inline-block" autocomplete="off">
+            <button type="submit" style="width:26%;display:inline-block">Send</button>
+        </form>
+        
+        <h3 style="margin-top:20px;">Actions</h3>
+        <form method="post">
+            <select name="reason" required>
+                <option value="">Select reason...</option>
+                <option value="Harassment">Harassment</option>
+                <option value="Fake Profile">Fake Profile</option>
+                <option value="Spam">Spam</option>
+                <option value="Inappropriate Content">Inappropriate Content</option>
+                <option value="Other">Other</option>
+            </select>
+            <textarea name="details" placeholder="Additional details (optional)" rows="2"></textarea>
+            <button type="submit" name="report" class="report-btn">🚩 Report User</button>
+        </form>
+        
+        <form method="post" style="margin-top:10px;">
+            <button type="submit" name="block" class="block-btn">🚫 Block User</button>
+        </form>
+        
+        <br><a href="/matches">← Back to Matches</a>
+        <div class="footer-links">
+            <a href="/safety">Safety Tips</a>
+        </div>
+    </div>
+</div>
+
+<script>
+window.onload = function(){
+    var chatbox = document.getElementById('chatbox');
+    chatbox.scrollTop = chatbox.scrollHeight;
+}
+</script>
+{% endblock %}

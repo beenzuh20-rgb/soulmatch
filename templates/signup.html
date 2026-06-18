@@ -1,86 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Signup - SoulMatch</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial;
-            background: linear-gradient(120deg, #43cea2, #185a9d);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .card {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            width: 320px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-
-        h2 {
-            text-align: center;
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            background: #00b894;
-            border: none;
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #009f7a;
-        }
-
-        a {
-            display: block;
-            text-align: center;
-            margin-top: 10px;
-            color: #00b894;
-        }
-    </style>
-</head>
-<body>
-
-<div class="card">
-    <h2>Sign Up 💙</h2>
-
-    <form method="POST">
-        <input name="username" placeholder="Username" required>
-        <input name="password" type="password" placeholder="Password" required>
-        <button type="submit">Create Account</button>
-    </form>
-
-   <a href="/login" style="
-    display:block;
-    text-align:center;
-    margin-top:15px;
-    padding:10px;
-    background:#333;
-    color:white;
-    border-radius:8px;
-    text-decoration:none;
-    font-weight:bold;
-">
-    Already have an account? Login
-</a>
+{% extends "base.html" %}
+{% block content %}
+<div class="overlay">
+    <div class="glass">
+        <h2>Sign Up</h2>
+        <form method="post">
+            <input name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <label style="display:block; margin:15px 0; font-size:14px;">
+                <input type="checkbox" name="agree_terms" required> 
+                I agree to the <a href="/terms" target="_blank">Terms and Conditions</a>
+            </label>
+            <button type="submit">Create Account</button>
+        </form>
+        <p><a href="/login">Already have an account? Login</a></p>
+    </div>
 </div>
-
-</body>
-</html>
+{% endblock %}

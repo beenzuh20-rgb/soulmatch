@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="overlay">
+    <div class="glass">
+        <h1 style="text-align:center;font-size:42px;color:white;margin-bottom:0;">💘 SoulMatch</h1>
+        <p style="text-align:center;color:#ddd;margin-top:5px;">Find Love. Build Connections.</p>
+        
+        {% if user.photo %}
+            <img src="{{ user.photo }}">
+        {% endif %}
+        
+        <h2>{{ user.username }}</h2>
+        <p>{{ user.bio }}</p>
+        <p>Age: {{ user.age }} | {{ user.gender }}</p>
+        <p style="color:#0f0">{{ get_online_status(user.last_active) }}</p>
+        
+        <a href="/like/{{ user.id }}"><button>❤️ Like</button></a>
+        <a href="/swipe"><button style="background:#333">❌ Pass</button></a>
+        
+        <br><br>
+        <a href="/profile">← Back to Profile</a>
+        <div class="footer-links">
+            <a href="/safety">Safety Tips</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

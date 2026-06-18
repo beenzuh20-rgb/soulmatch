@@ -1,188 +1,48 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Tinder Profile UI</title>
-
-<style>
-body {
-    margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(120deg, #1a1a2e, #16213e);
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* swipe container */
-.wrapper {
-    width: 360px;
-    position: relative;
-}
-
-/* main card */
-.card {
-    background: white;
-    border-radius: 25px;
-    overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    position: relative;
-}
-
-/* image */
-.card img {
-    width: 100%;
-    height: 420px;
-    object-fit: cover;
-}
-
-/* info section */
-.info {
-    padding: 15px;
-}
-
-.name {
-    font-size: 22px;
-    font-weight: bold;
-}
-
-.sub {
-    color: gray;
-    font-size: 14px;
-    margin-top: 3px;
-}
-
-.bio {
-    margin-top: 10px;
-    font-size: 14px;
-    color: #333;
-}
-
-/* swipe buttons */
-.actions {
-    display: flex;
-    justify-content: space-around;
-    padding: 15px;
-}
-
-.btn {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.btn:hover {
-    transform: scale(1.1);
-}
-
-.pass {
-    background: #ff4d4d;
-    color: white;
-}
-
-.like {
-    background: #4CAF50;
-    color: white;
-}
-
-.super {
-    background: #3498db;
-    color: white;
-}
-
-/* edit form */
-.edit {
-    margin-top: 15px;
-    background: rgba(255,255,255,0.1);
-    padding: 15px;
-    border-radius: 15px;
-    backdrop-filter: blur(10px);
-}
-
-input, textarea {
-    width: 100%;
-    margin-top: 6px;
-    padding: 8px;
-    border-radius: 10px;
-    border: none;
-}
-
-button.save {
-    width: 100%;
-    margin-top: 10px;
-    padding: 10px;
-    border: none;
-    border-radius: 20px;
-    background: linear-gradient(135deg,#ff416c,#ff4b2b);
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.links {
-    text-align: center;
-    margin-top: 10px;
-}
-
-.links a {
-    color: white;
-    text-decoration: none;
-    margin: 0 8px;
-}
-</style>
-</head>
-
-<body>
-
-<div class="wrapper">
-
-    <div class="card">
-
-        {% if user[7] %}
-            <img src="{{ user[7] }}">
+{% extends "base.html" %}
+{% block content %}
+<div class="overlay">
+    <div class="glass">
+        <h2 style="text-align:center">Your Profile</h2>
+        
+        {% if user.photo %}
+            <img src="{{ user.photo }}" style="height:280px">
         {% else %}
-            <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
+            <div style="height:280px;background:rgba(255,255,255,0.1);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:80px">👤</div>
         {% endif %}
-
-        <div class="info">
-            <div class="name">{{ user[1] }}, {{ user[4] }}</div>
-            <div class="sub">{{ user[5] }} • {{ user[6] }}</div>
-            <div class="bio">{{ user[3] }}</div>
+        
+        <h3 style="margin:15px 0 5px">{{ user.username }}</h3>
+        <p style="color:#0f0; font-weight:bold">{{ get_online_status(user.last_active) }}</p>
+        <p><strong>Bio:</strong> {{ user.bio or 'Tell others about yourself...' }}</p>
+        <p><strong>Age:</strong> {{ user.age or '—' }} • <strong>{{ user.gender or '—' }}</strong></p>
+        <p><strong>Location:</strong> {{ user.location or 'Not set' }}</p>
+        
+        <div style="margin:15px 0">
+            <strong>Interests:</strong><br>
+            {% for interest in interests %}
+                <span style="background:rgba(255,255,255,0.2);padding:5px 14px;border-radius:20px;margin:3px;display:inline-block">{{ interest }}</span>
+            {% endfor %}
         </div>
 
-        <div class="actions">
-            <button class="btn pass">✖</button>
-            <button class="btn super">⭐</button>
-            <button class="btn like">❤</button>
-        </div>
-
-    </div>
-
-    <!-- EDIT PROFILE -->
-    <div class="edit">
-        <form method="POST" enctype="multipart/form-data">
-            <input name="age" placeholder="Age">
-            <input name="gender" placeholder="Gender">
-            <input name="location" placeholder="Location">
-            <input name="interests" placeholder="Interests">
-            <textarea name="bio" placeholder="Bio"></textarea>
-            <input type="file" name="photo">
-
-            <button class="save">Save Profile</button>
+        <h3>✏️ Edit Profile</h3>
+        <form method="post" enctype="multipart/form-data">
+            <input name="bio" placeholder="Bio" value="{{ user.bio or '' }}">
+            <input name="age" placeholder="Age" value="{{ user.age or '' }}">
+            <input name="gender" placeholder="Gender" value="{{ user.gender or '' }}">
+            <input name="location" placeholder="Location" value="{{ user.location or '' }}">
+            <input name="interests" placeholder="Interests (comma separated)" value="{{ user.interests or '' }}">
+            <input type="file" name="photo" accept="image/*">
+            <button type="submit">Save Changes</button>
         </form>
-    </div>
 
-    <div class="links">
-        <a href="/swipe">Swipe</a>
-        <a href="/matches">Matches</a>
-        <a href="/logout">Logout</a>
-    </div>
+        <a href="/swipe"><button style="background:#4CAF50;margin-top:12px">🚀 Start Swiping</button></a>
+        <a href="/matches"><button>❤️ My Matches</button></a>
+        <a href="/logout"><button style="background:#555">Logout</button></a>
 
+        <div class="footer-links">
+            <a href="/terms">Terms</a> • 
+            <a href="/privacy">Privacy</a> • 
+            <a href="/safety">Safety Tips</a>
+        </div>
+    </div>
 </div>
-
-</body>
-</html>
+{% endblock %}

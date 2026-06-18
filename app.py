@@ -111,41 +111,13 @@ def forgot_password():
             conn.close()
             
             reset_link = f"https://{request.host}/reset_password/{token}"
-            print(f"\n🔗 PASSWORD RESET LINK:\n{reset_link}\n")  # Check Render Logs
             
-            return render_template("forgot_password_success.html")
+            return render_template("forgot_password_success.html", reset_link=reset_link)
         
         conn.close()
         return render_template("forgot_password.html", error="Username not found")
     
     return render_template("forgot_password.html")
-
-@app.route("/reset_password/<token>", methods=["GET", "POST"])
-def reset_password(token):
-    conn = sqlite3.connect("dating.db")
-    c = conn.cursor()
-    c.execute("SELECT id FROM users WHERE reset_token=? AND reset_expires > ?", 
-              (token, datetime.utcnow().isoformat()))
-    user = c.fetchone()
-    
-    if not user:
-        conn.close()
-        return "Invalid or expired reset link. Please request a new one."
-    
-    if request.method == "POST":
-        new_password = request.form.get("password")
-        hashed_pw = generate_password_hash(new_password)
-        
-        c.execute("UPDATE users SET password=?, reset_token=NULL, reset_expires=NULL WHERE id=?", 
-                  (hashed_pw, user[0]))
-        conn.commit()
-        conn.close()
-        
-        return render_template("reset_success.html")
-    
-    conn.close()
-    return render_template("reset_password.html", token=token)
-
 # ---------------- Existing Routes (Unchanged) ---------------- #
 @app.route("/")
 def home():

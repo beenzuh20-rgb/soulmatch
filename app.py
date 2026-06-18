@@ -99,6 +99,10 @@ def privacy():
 def safety():
     return render_template("safety.html")
 
+@app.route("/guidelines")
+def guidelines():
+    return render_template("guidelines.html")
+    
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":

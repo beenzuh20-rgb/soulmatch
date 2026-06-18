@@ -143,7 +143,7 @@ def reset_password(token):
     conn.close()
     return render_template("reset_password.html", token=token)
 
-# ---------------- Existing Routes (Unchanged) ---------------- #
+# ---------------- ROUTES ---------------- #
 @app.route("/")
 def home():
     return render_template("home.html")
@@ -241,10 +241,7 @@ def profile():
    
     interests = [i.strip() for i in (user[8] or "").split(",") if i.strip()]
    
-    return render_template("profile.html",
-                         user=user_dict,
-                         interests=interests,
-                         get_online_status=get_online_status)
+    return render_template("profile.html", user=user_dict, interests=interests, get_online_status=get_online_status)
 
 @app.route("/logout")
 def logout():
@@ -259,8 +256,8 @@ def swipe():
     conn = sqlite3.connect("dating.db")
     c = conn.cursor()
     c.execute("""
-        SELECT * FROM users
-        WHERE id != ?
+        SELECT * FROM users 
+        WHERE id != ? 
         AND id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ?)
         AND id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ?)
         ORDER BY RANDOM() LIMIT 1
@@ -272,8 +269,12 @@ def swipe():
         return redirect("/matches")
    
     user_dict = {
-        "id": user[0], "username": user[1], "bio": user[3],
-        "age": user[4], "gender": user[5], "photo": user[7],
+        "id": user[0],
+        "username": user[1],
+        "bio": user[3],
+        "age": user[4],
+        "gender": user[5],
+        "photo": user[7],
         "last_active": user[9]
     }
    
